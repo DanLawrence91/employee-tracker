@@ -1,0 +1,3 @@
+SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id;
+
+SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, employee.manager_id AS manager FROM employee JOIN emp_role ON employee.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id;
