@@ -62,7 +62,7 @@ function addDept() {
 
 function addRole() {
   var deptChoices = [];
-  db.query(`SELECT * FROM department;`, function (err, data) {
+  db.query(`SELECT dept_name FROM department;`, function (err, data) {
     if (err) throw err;
     for (var i = 0; i < data.length; i++) {
       deptChoices.push(data[i].dept_name);
@@ -168,7 +168,50 @@ function addEmpl() {
     });
 }
 
-function updateEmpl() {}
+async function updateEmpl() {
+  var emplChoices = [];
+  await db
+    .promise()
+    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
+    .then(function (err, data) {
+      if (err) throw err;
+      for (var i = 0; i < data.length; i++) {
+        emplChoices.push(data[i].name);
+      }
+      // console.log(emplChoices);
+    });
+  var roleChoices = [];
+  await db
+    .promise()
+    .query(`SELECT title FROM emp_role;`)
+    .then(function (err, data) {
+      if (err) throw err;
+      for (var i = 0; i < data.length; i++) {
+        roleChoices.push(data[i].title);
+      }
+    });
+  console.log(emplChoices);
+
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'first_name',
+      message: "What is the employee's first name?",
+    },
+    {
+      type: 'list',
+      name: 'empUpdate',
+      message: 'Which employees role will you update?',
+      choices: emplChoices,
+    },
+    {
+      type: 'list',
+      name: 'empRoles',
+      message: 'What is their new role?',
+      choices: roleChoices,
+    },
+  ]);
+}
 
 var menuQ = () => {
   inquirer
