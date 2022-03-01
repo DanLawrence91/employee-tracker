@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
+const { indexOf } = require('lodash');
 
 const db = mysql.createConnection(
   {
@@ -38,6 +39,73 @@ function viewEmps() {
   });
 }
 
+function addDept() {
+  inquirer
+    .prompt({
+      type: 'input',
+      name: 'department',
+      message: 'What is the name of the department',
+    })
+    .then((data) => {
+      const sql = `INSERT INTO department(dept_name) VALUES (?)`;
+      const param = [data.department];
+      console.log(param);
+
+      db.query(sql, param, (err, results) => {
+        if (err) {
+          throw err;
+        }
+
+        menuQ();
+      });
+    });
+}
+
+function addRole() {
+  var deptChoices = [];
+  db.query(`SELECT * FROM department;`, function (err, data) {
+    if (err) throw err;
+    for (var i = 0; i < data.length; i++) {
+      deptChoices.push(data[i].dept_name);
+    }
+  });
+
+  inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'role',
+        message: 'What is the name of the role?',
+      },
+      {
+        type: 'number',
+        name: 'salary',
+        message: 'What is the salary for this role?',
+      },
+      {
+        type: 'list',
+        name: 'deptOfRole',
+        message: 'What department does the role belong to?',
+        choices: deptChoices,
+      },
+    ])
+    .then((data) => {
+      const sql = `INSERT INTO emp_role(title, salary, department_id) VALUES (?, ?, ?)`;
+      const dept = deptChoices.indexOf(data.deptOfRole);
+      const param = [data.role, data.salary, dept];
+      console.log(param);
+
+      db.query(sql, param, (err, results) => {
+        if (err) {
+          throw err;
+        }
+        console.log(data.role + ' added to database');
+
+        menuQ();
+      });
+    });
+}
+
 var menuQ = () => {
   inquirer
     .prompt({
@@ -63,6 +131,10 @@ var menuQ = () => {
           return viewRoles();
         case 'View all employees':
           return viewEmps();
+        case 'Add a department':
+          return addDept();
+        case 'Add a role':
+          return addRole();
         case 'Quit':
           return console.log('Goodbye');
       }
