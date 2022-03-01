@@ -1,13 +1,14 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
+require('dotenv').config();
 
 const db = mysql.createConnection(
   {
     host: 'localhost',
-    user: 'root',
-    password: 'irfc1899',
-    database: 'employee_db',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   },
   console.log(`Connected to the employee_db database.`)
 );
@@ -184,20 +185,43 @@ function updateEmpl() {
       for (var i = 0; i < roles.length; i++) {
         roleChoices.push(roles[i].title);
       }
-      inquirer.prompt([
-        {
-          type: 'list',
-          name: 'empUpdate',
-          message: 'Which employees role will you update?',
-          choices: emplChoices,
-        },
-        {
-          type: 'list',
-          name: 'empRoles',
-          message: 'What is their new role?',
-          choices: roleChoices,
-        },
-      ]);
+      inquirer
+        .prompt([
+          {
+            type: 'list',
+            name: 'empUpdate',
+            message: 'Which employees role will you update?',
+            choices: emplChoices,
+          },
+          {
+            type: 'list',
+            name: 'empRoles',
+            message: 'What is their new role?',
+            choices: roleChoices,
+          },
+        ])
+        .then((data) => {
+          // console.log(data);
+          // console.log(emplChoices);
+          // console.log(roleChoices);
+          // console.log(data.empRoles);
+          // console.log(data.empUdate);
+          const sql = `UPDATE employee SET role_id = (?) WHERE id = (?);`;
+          const empl = emplChoices.indexOf(data.empUpdate) + 1;
+          const roleC = roleChoices.indexOf(data.empRoles) + 1;
+          const param = [roleC, empl];
+          //console.log(param);
+
+          db.promise()
+            .query(sql, param)
+            .then(
+              console.log(
+                data.empUpdate + ' role has been changed to ' + data.empRoles
+              )
+            );
+
+          menuQ();
+        });
     });
 }
 
