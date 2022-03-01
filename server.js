@@ -168,49 +168,37 @@ function addEmpl() {
     });
 }
 
-async function updateEmpl() {
+function updateEmpl() {
   var emplChoices = [];
-  await db
-    .promise()
-    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
-    .then(function (err, data) {
-      if (err) throw err;
-      for (var i = 0; i < data.length; i++) {
-        emplChoices.push(data[i].name);
-      }
-      // console.log(emplChoices);
-    });
   var roleChoices = [];
-  await db
-    .promise()
-    .query(`SELECT title FROM emp_role;`)
-    .then(function (err, data) {
-      if (err) throw err;
-      for (var i = 0; i < data.length; i++) {
-        roleChoices.push(data[i].title);
+  db.promise()
+    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
+    .then(function ([employees]) {
+      for (var i = 0; i < employees.length; i++) {
+        emplChoices.push(employees[i].name);
       }
+      return db.promise().query(`SELECT title FROM emp_role;`);
+      // console.log(emplChoices);
+    })
+    .then(function ([roles]) {
+      for (var i = 0; i < roles.length; i++) {
+        roleChoices.push(roles[i].title);
+      }
+      inquirer.prompt([
+        {
+          type: 'list',
+          name: 'empUpdate',
+          message: 'Which employees role will you update?',
+          choices: emplChoices,
+        },
+        {
+          type: 'list',
+          name: 'empRoles',
+          message: 'What is their new role?',
+          choices: roleChoices,
+        },
+      ]);
     });
-  console.log(emplChoices);
-
-  inquirer.prompt([
-    {
-      type: 'input',
-      name: 'first_name',
-      message: "What is the employee's first name?",
-    },
-    {
-      type: 'list',
-      name: 'empUpdate',
-      message: 'Which employees role will you update?',
-      choices: emplChoices,
-    },
-    {
-      type: 'list',
-      name: 'empRoles',
-      message: 'What is their new role?',
-      choices: roleChoices,
-    },
-  ]);
 }
 
 var menuQ = () => {
