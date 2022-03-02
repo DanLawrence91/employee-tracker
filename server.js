@@ -273,9 +273,9 @@ function delOption() {
               },
             ])
             .then((data) => {
-              const sql = `DELETE FROM department WHERE dept_id = (?);`;
+              const sql = `DELETE FROM department WHERE id = (?);`;
 
-              const param = deptChoice.indexOf(data.delDept);
+              const param = deptChoice.indexOf(data.delDept) + 1;
 
               db.query(sql, param, (err, results) => {
                 if (err) {
@@ -287,9 +287,53 @@ function delOption() {
               });
             });
         case 'Role':
-          return delRole();
+          return inquirer
+            .prompt([
+              {
+                type: 'list',
+                name: 'delRole',
+                message: 'What role do you want to delete',
+                choices: roleChoice,
+              },
+            ])
+            .then((data) => {
+              const sql = `DELETE FROM emp_role WHERE id = (?);`;
+
+              const param = roleChoice.indexOf(data.delRole) + 1;
+
+              db.query(sql, param, (err, results) => {
+                if (err) {
+                  throw err;
+                }
+                console.log(data.delRole + ' has been deleted from database');
+
+                menuQ();
+              });
+            });
         case 'Employee':
-          return delEmp();
+          return inquirer
+            .prompt([
+              {
+                type: 'list',
+                name: 'delEmp',
+                message: 'What role do you want to delete',
+                choices: empChoice,
+              },
+            ])
+            .then((data) => {
+              const sql = `DELETE FROM employee WHERE id = (?);`;
+
+              const param = empChoice.indexOf(data.delEmp) + 1;
+
+              db.query(sql, param, (err, results) => {
+                if (err) {
+                  throw err;
+                }
+                console.log(data.delEmp + ' has been deleted from database');
+
+                menuQ();
+              });
+            });
       }
     });
 }
@@ -312,9 +356,7 @@ var menuQ = () => {
         'Update employee manager',
         'View employees by manager',
         'View employees by department',
-        'Delete a department',
-        'Delete a role',
-        'Delete an emmployee',
+        'Delete a department, role or employee',
         'Quit',
       ],
     })
