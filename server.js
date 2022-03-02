@@ -23,7 +23,7 @@ function viewDepts() {
 
 function viewRoles() {
   const sql =
-    'SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id GROUP BY emp_role.id;';
+    'SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id;';
   db.query(sql, function (err, results) {
     console.table(results);
     menuQ();
@@ -32,7 +32,7 @@ function viewRoles() {
 
 function viewEmpls() {
   const sql =
-    'SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id GROUP BY employee1.id;';
+    'SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id;';
   db.query(sql, function (err, results) {
     console.table(results);
     menuQ();
@@ -201,16 +201,10 @@ function updateEmpl() {
           },
         ])
         .then((data) => {
-          // console.log(data);
-          // console.log(emplChoices);
-          // console.log(roleChoices);
-          // console.log(data.empRoles);
-          // console.log(data.empUdate);
           const sql = `UPDATE employee SET role_id = (?) WHERE id = (?);`;
           const empl = emplChoices.indexOf(data.empUpdate) + 1;
           const roleC = roleChoices.indexOf(data.empRoles) + 1;
           const param = [roleC, empl];
-          //console.log(param);
 
           db.promise()
             .query(sql, param)
@@ -222,6 +216,81 @@ function updateEmpl() {
 
           menuQ();
         });
+    });
+}
+
+function viewBudget() {
+  const sql =
+    'SELECT SUM(emp_role.salary) AS utilized_budget, department.dept_name AS department FROM emp_role JOIN department ON emp_role.department_id = department.id GROUP BY department_id;';
+  db.query(sql, function (err, results) {
+    console.table(results);
+    menuQ();
+  });
+}
+
+function delOption() {
+  var deptChoice = [];
+  db.query(`SELECT dept_name FROM department;`, function (err, data) {
+    if (err) throw err;
+    for (var i = 0; i < data.length; i++) {
+      deptChoice.push(data[i].dept_name);
+    }
+  });
+  var roleChoice = [];
+  db.query(`SELECT title FROM emp_role;`, function (err, data) {
+    if (err) throw err;
+    for (var i = 0; i < data.length; i++) {
+      roleChoice.push(data[i].title);
+    }
+  });
+  var empChoice = [];
+  db.query(
+    `SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`,
+    function (err, data) {
+      if (err) throw err;
+      for (var i = 0; i < data.length; i++) {
+        empChoice.push(data[i].name);
+      }
+    }
+  );
+  inquirer
+    .prompt({
+      type: 'list',
+      name: 'delete',
+      message: 'What do you want to delete?',
+      choices: ['Department', 'Role', 'Employee'],
+    })
+    .then((data) => {
+      switch (data.delete) {
+        case 'Department':
+          return inquirer
+            .prompt([
+              {
+                type: 'list',
+                name: 'delDept',
+                message: 'What department do you want to delete',
+                choices: deptChoice,
+              },
+            ])
+            .then((data) => {
+              const sql = `DELETE FROM department WHERE dept_id = (?);`;
+
+              const param = deptChoice.indexOf(data.delDept);
+
+              db.query(sql, param, (err, results) => {
+                if (err) {
+                  throw err;
+                }
+                console.log(data.delDept + ' has been deleted from database');
+
+                menuQ();
+              });
+            });
+        case 'Role':
+          return delRole();
+        case 'Employee':
+          return delEmp();
+      }
     });
 }
 
@@ -239,6 +308,13 @@ var menuQ = () => {
         'Add a role',
         'Add an employee',
         'Update employee role',
+        'View utilized budget by department',
+        'Update employee manager',
+        'View employees by manager',
+        'View employees by department',
+        'Delete a department',
+        'Delete a role',
+        'Delete an emmployee',
         'Quit',
       ],
     })
@@ -258,6 +334,16 @@ var menuQ = () => {
           return addEmpl();
         case 'Update employee role':
           return updateEmpl();
+        case 'View utilized budget by department':
+          return viewBudget();
+        case 'Update employee manager':
+          return updateManager();
+        case 'View employees by manager':
+          return viewEmpByMan();
+        case 'View employees by department':
+          return viewEmpByDept();
+        case 'Delete a department, role or employee':
+          return delOption();
         case 'Quit':
           return console.log('Goodbye');
       }
