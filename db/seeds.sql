@@ -15,11 +15,11 @@ VALUES ("CFO", 250000, 2),
        ("Customer Service Operator", 60000, 1);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Kevin", "Tupik", 3, 3),
+VALUES ("Kevin", "Tupik", 3, 2),
         ("Kunal", "Shah", 5, null),
-        ("Sarah", "Lord", 7, 8),
-        ("Mike", "Chann", 2, 1),
+        ("Sarah", "Lord", 7, 6),
+        ("Mike", "Chann", 2, 8),
         ("Ashley", "Rodriguez", 4, null),
         ("John", "Doe", 1, null),
-        ("Tom", "Allen", 8, null),
-        ("Malia", "Brown", 6, 5);
+        ("Tom", "Allen", 8, 5),
+        ("Malia", "Brown", 6, null);

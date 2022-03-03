@@ -14,7 +14,7 @@ const db = mysql.createConnection(
 );
 
 function viewDepts() {
-  const sql = 'SELECT id, dept_name AS department FROM department;';
+  const sql = 'SELECT id, dept_name AS department FROM department ORDER BY id;';
   db.query(sql, function (err, results) {
     console.table(results);
     menuQ();
@@ -23,7 +23,7 @@ function viewDepts() {
 
 function viewRoles() {
   const sql =
-    'SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id;';
+    'SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id ORDER BY emp_role.id;';
   db.query(sql, function (err, results) {
     console.table(results);
     menuQ();
@@ -32,7 +32,7 @@ function viewRoles() {
 
 function viewEmpls() {
   const sql =
-    'SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id;';
+    'SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id ORDER BY employee1.id;';
   db.query(sql, function (err, results) {
     console.table(results);
     menuQ();
@@ -179,7 +179,6 @@ function updateEmpl() {
         emplChoices.push(employees[i].name);
       }
       return db.promise().query(`SELECT title FROM emp_role;`);
-      // console.log(emplChoices);
     })
     .then(function ([roles]) {
       for (var i = 0; i < roles.length; i++) {
@@ -211,6 +210,65 @@ function updateEmpl() {
             .then(
               console.log(
                 data.empUpdate + ' role has been changed to ' + data.empRoles
+              )
+            );
+
+          menuQ();
+        });
+    });
+}
+
+function viewEmpByMan() {}
+
+// Not currently working
+
+function updateManager() {
+  var emplChoices = [];
+  var managerChoices = [];
+  db.promise()
+    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
+    .then(function ([employees]) {
+      for (var i = 0; i < employees.length; i++) {
+        emplChoices.push(employees[i].name);
+      }
+      return db
+        .promise()
+        .query(
+          `SELECT CONCAT(first_name, " ", last_name) as manager FROM employee;`
+        );
+    })
+    .then(function ([manager]) {
+      for (var i = 0; i < manager.length; i++) {
+        managerChoices.push(manager[i].manager);
+      }
+      inquirer
+        .prompt([
+          {
+            type: 'list',
+            name: 'emplUpdate',
+            message: 'Which employees do you want to update?',
+            choices: emplChoices,
+          },
+          {
+            type: 'list',
+            name: 'emplManager',
+            message: 'Who is their new manager?',
+            choices: managerChoices,
+          },
+        ])
+        .then((data) => {
+          const sql = `UPDATE employee SET manager_id = (?) WHERE id = (?);`;
+          const empl = emplChoices.indexOf(data.emplUpdate) + 1;
+          const mgr = managerChoices.indexOf(data.emplManager) + 1;
+          const param = [mgr, empl];
+
+          db.promise()
+            .query(sql, param)
+            .then(
+              console.log(
+                data.emplUpdate +
+                  ' manager has been changed to ' +
+                  data.emplManager
               )
             );
 
