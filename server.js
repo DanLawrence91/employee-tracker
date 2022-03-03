@@ -220,7 +220,7 @@ function updateEmpl() {
 
 function viewEmpByMan() {}
 
-// Not currently working
+function viewEmpByDept() {}
 
 function updateManager() {
   var emplChoices = [];
