@@ -58,7 +58,7 @@ function addDept() {
         if (err) {
           throw err;
         }
-
+        console.log(`${data.department} has been added to the database`);
         menuQ();
       });
     });
@@ -101,7 +101,7 @@ function addRole() {
           if (err) {
             throw err;
           }
-          console.log('New role has been added to database');
+          console.log(`${data.role} has been added to the database`);
 
           menuQ();
         });
@@ -165,19 +165,14 @@ function addEmpl() {
                 },
               ])
               .then((manChoice) => {
-                const man = manChoice.empManager;
-                param.push(man);
+                param.push(manChoice.empManager);
 
                 const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
                 db.query(sql, param, (err, results) => {
-                  if (err) {
-                    throw err;
-                  }
+                  if (err) throw err;
+
                   console.log(
-                    data.first_name +
-                      ' ' +
-                      data.last_name +
-                      ' added to database'
+                    `${data.first_name} ${data.last_name} has been added to the database`
                   );
 
                   menuQ();
@@ -191,52 +186,54 @@ function addEmpl() {
 
 // function that allows for employees role to be changed by selecting which employee to change the role for, and the new role they have
 function updateEmpl() {
-  var emplChoices = [];
-  var roleChoices = [];
-  db.promise()
-    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
-    .then(function ([employees]) {
-      for (var i = 0; i < employees.length; i++) {
-        emplChoices.push(employees[i].name);
-      }
-      return db.promise().query(`SELECT title FROM emp_role;`);
-    })
-    .then(function ([roles]) {
-      for (var i = 0; i < roles.length; i++) {
-        roleChoices.push(roles[i].title);
-      }
+  db.query(
+    `SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee;`,
+    function (err, res) {
+      const emplChoices = res.map(({ id, name }) => ({
+        name: name,
+        value: id,
+      }));
+
       inquirer
-        .prompt([
-          {
-            type: 'list',
-            name: 'empUpdate',
-            message: 'Which employees role will you update?',
-            choices: emplChoices,
-          },
-          {
-            type: 'list',
-            name: 'empRoles',
-            message: 'What is their new role?',
-            choices: roleChoices,
-          },
-        ])
+        .prompt({
+          type: 'list',
+          name: 'empUpdate',
+          message: 'Which employees role will you update?',
+          choices: emplChoices,
+        })
         .then((data) => {
-          const sql = `UPDATE employee SET role_id = (?) WHERE id = (?);`;
-          const empl = emplChoices.indexOf(data.empUpdate) + 1;
-          const roleC = roleChoices.indexOf(data.empRoles) + 1;
-          const param = [roleC, empl];
+          const param = [data.empUpdate];
 
-          db.promise()
-            .query(sql, param)
-            .then(
-              console.log(
-                data.empUpdate + ' role has been changed to ' + data.empRoles
-              )
-            );
+          db.query(`SELECT id, title FROM emp_role;`, function (err, res) {
+            const roleChoices = res.map(({ id, title }) => ({
+              name: title,
+              value: id,
+            }));
 
-          menuQ();
+            inquirer
+              .prompt({
+                type: 'list',
+                name: 'empRoles',
+                message: 'What is their new role?',
+                choices: roleChoices,
+              })
+              .then((roleC) => {
+                param.unshift(roleC.empRoles);
+
+                const sql = `UPDATE employee SET role_id = (?) WHERE id = (?);`;
+
+                db.query(sql, param, (err, results) => {
+                  if (err) throw err;
+
+                  console.log('Role has been updated.');
+
+                  menuQ();
+                });
+              });
+          });
         });
-    });
+    }
+  );
 }
 
 // function to view all employees managed by a certain individual. User is prompted for an individual and then shown a table of all
