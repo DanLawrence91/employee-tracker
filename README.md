@@ -14,7 +14,7 @@ Begin the project logging into the mysql shell and running the schema.sql file t
 
 ![Display of main menu](./assets/readme1.png)
 
-Once the relelvant option has been chosen from the menu you will be taken to that section of the app and either shown the information requested, or given further prompts to add or edit information. Each time an option is chosen you will add or view the relevant data and then be taken back to the main menu where you can decided what to do next, or quit and end the server by pressing ctrl + c.
+Once the relelvant option has been chosen from the menu you will be taken to that section of the app and either shown the information requested, or given further prompts to add or edit information. Each time an option is chosen you will add or view the relevant data and then be taken back to the main menu where you can decided what to do next, or quit and end the server by selecting quit from the main menu.
 
 This image shows the table shown if view all departments is chosen as an option.
 ![Display if view all departments chosen](./assets/readme2.png)

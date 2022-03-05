@@ -523,7 +523,7 @@ var menuQ = () => {
         case 'Delete a department, role or employee':
           return delOption();
         case 'Quit':
-          return console.log('Goodbye');
+          return process.exit();
       }
     });
 };
