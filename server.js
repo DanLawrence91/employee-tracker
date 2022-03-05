@@ -95,8 +95,7 @@ function addRole() {
       ])
       .then((data) => {
         const sql = `INSERT INTO emp_role(title, salary, department_id) VALUES (?, ?, ?)`;
-        const deptID = data.deptOfRole;
-        const param = [data.role, data.salary, deptID];
+        const param = [data.role, data.salary, data.deptOfRole];
 
         db.query(sql, param, (err, results) => {
           if (err) {
@@ -243,60 +242,62 @@ function updateEmpl() {
 // function to view all employees managed by a certain individual. User is prompted for an individual and then shown a table of all
 // employees they manage
 function viewEmpByMan() {
-  var manChoice = [];
-  db.promise()
-    .query(`SELECT concat(first_name, " ", last_name) AS name FROM employee;`)
-    .then(function ([manager]) {
-      for (var i = 0; i < manager.length; i++) {
-        manChoice.push(manager[i].name);
-      }
+  db.query(
+    `SELECT concat(first_name, " ", last_name) AS name FROM employee;`,
+    function (err, res) {
+      if (err) throw err;
+
+      const manager = res.map(({ id, name }) => ({
+        name: name,
+        value: id,
+      }));
       inquirer
         .prompt({
           type: 'list',
           name: 'mangView',
           message: 'Which manager do you want to view employees for?',
-          choices: manChoice,
+          choices: manager,
         })
         .then((data) => {
           const sql = `SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id WHERE employee1.manager_id = (?)`;
-          const param = manChoice.indexOf(data.mangView) + 1;
-          db.query(sql, param, function (err, res) {
-            if (res) {
-              console.table(res);
-              menuQ();
-            }
-          });
-        });
-    });
-}
-
-// function to view all the employees for a specific department. User is prompted to select a department and then all employees for that
-// department will be shown in a table along with their title
-function viewEmpByDept() {
-  var deptEmp = [];
-  db.promise()
-    .query(`SELECT dept_name AS department FROM department;`)
-    .then(function ([department]) {
-      for (var i = 0; i < department.length; i++) {
-        deptEmp.push(department[i].department);
-      }
-      inquirer
-        .prompt({
-          type: 'list',
-          name: 'deptView',
-          message: 'Which department do you want to view the employees for?',
-          choices: deptEmp,
-        })
-        .then((data) => {
-          const sql = `SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, emp_role.title AS title, department.dept_name AS department FROM employee JOIN emp_role ON employee.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id WHERE department.id = (?);`;
-          const param = deptEmp.indexOf(data.deptView) + 1;
-
+          const param = data.mangView;
           db.query(sql, param, function (err, res) {
             console.table(res);
             menuQ();
           });
         });
-    });
+    }
+  );
+}
+
+// function to view all the employees for a specific department. User is prompted to select a department and then all employees for that
+// department will be shown in a table along with their title
+function viewEmpByDept() {
+  db.query(`SELECT id, dept_name FROM department;`, function (err, res) {
+    if (err) throw err;
+
+    const dept = res.map(({ id, dept_name }) => ({
+      name: dept_name,
+      value: id,
+    }));
+
+    inquirer
+      .prompt({
+        type: 'list',
+        name: 'deptView',
+        message: 'Which department do you want to view the employees for?',
+        choices: dept,
+      })
+      .then((data) => {
+        const sql = `SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, emp_role.title AS title, department.dept_name AS department FROM employee JOIN emp_role ON employee.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id WHERE department.id = (?);`;
+        const param = data.deptView;
+
+        db.query(sql, param, function (err, res) {
+          console.table(res);
+          menuQ();
+        });
+      });
+  });
 }
 
 // function that allows you to update an employees manager. First the employee is selected, then the manager with both selections creating an array
