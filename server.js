@@ -13,6 +13,7 @@ const db = mysql.createConnection(
   console.log(`Connected to the employee_db database.`)
 );
 
+// function to view all departments in a table in the console
 function viewDepts() {
   const sql = 'SELECT id, dept_name AS department FROM department ORDER BY id;';
   db.query(sql, function (err, results) {
@@ -21,6 +22,7 @@ function viewDepts() {
   });
 }
 
+// function to view all roles in a table in the console
 function viewRoles() {
   const sql =
     'SELECT emp_role.id AS id, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary FROM emp_role JOIN department ON emp_role.department_id = department.id ORDER BY emp_role.id;';
@@ -30,6 +32,7 @@ function viewRoles() {
   });
 }
 
+// function to view all employees in a table in the console
 function viewEmpls() {
   const sql =
     'SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, emp_role.salary AS salary, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id ORDER BY employee1.id;';
@@ -39,6 +42,7 @@ function viewEmpls() {
   });
 }
 
+// function to add a new department to the database
 function addDept() {
   inquirer
     .prompt({
@@ -49,7 +53,6 @@ function addDept() {
     .then((data) => {
       const sql = `INSERT INTO department(dept_name) VALUES (?)`;
       const param = [data.department];
-      console.log(param);
 
       db.query(sql, param, (err, results) => {
         if (err) {
@@ -61,6 +64,7 @@ function addDept() {
     });
 }
 
+// function to add a new role to database
 function addRole() {
   var deptChoices = [];
   db.query(`SELECT dept_name FROM department;`, function (err, data) {
@@ -92,7 +96,6 @@ function addRole() {
     .then((data) => {
       const sql = `INSERT INTO emp_role(title, salary, department_id) VALUES (?, ?, ?)`;
       const dept = deptChoices.indexOf(data.deptOfRole) + 1;
-      console.log(dept);
       const param = [data.role, data.salary, dept];
 
       db.query(sql, param, (err, results) => {
@@ -106,6 +109,7 @@ function addRole() {
     });
 }
 
+//function to add a new employee
 function addEmpl() {
   var roleChoices = [];
   db.query(`SELECT title FROM emp_role;`, function (err, data) {
@@ -169,6 +173,7 @@ function addEmpl() {
     });
 }
 
+// function that allows for employees role to be changed by selecting which employee to change the role for, and the new role they have
 function updateEmpl() {
   var emplChoices = [];
   var roleChoices = [];
@@ -220,8 +225,35 @@ function updateEmpl() {
 
 function viewEmpByMan() {}
 
-function viewEmpByDept() {}
+function viewEmpByDept() {
+  var deptEmp = [];
+  db.promise()
+    .query(`SELECT dept_name AS department FROM department;`)
+    .then(function ([department]) {
+      for (var i = 0; i < department.length; i++) {
+        deptEmp.push(department[i].department);
+      }
+      inquirer
+        .prompt({
+          type: 'list',
+          name: 'deptView',
+          message: 'Which department do you want to view the employees for?',
+          choices: deptEmp,
+        })
+        .then((data) => {
+          const sql = `SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, emp_role.title AS title, department.dept_name AS department FROM employee JOIN emp_role ON employee.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id WHERE department.id = (?);`;
+          const param = deptEmp.indexOf(data.deptView) + 1;
 
+          db.query(sql, param, function (err, res) {
+            console.table(res);
+            menuQ();
+          });
+        });
+    });
+}
+
+// function that allows you to update an employees manager. First the employee is selected, then the manager with both selections creating an array
+// from here a query is run to change the manager id for that employee
 function updateManager() {
   var emplChoices = [];
   var managerChoices = [];
@@ -277,6 +309,7 @@ function updateManager() {
     });
 }
 
+// function to select a department from the database and then sums the utilized budget for that department based on salaries of all employees in department
 function viewBudget() {
   const sql =
     'SELECT SUM(emp_role.salary) AS utilized_budget, department.dept_name AS department FROM emp_role JOIN department ON emp_role.department_id = department.id GROUP BY department_id;';
@@ -286,6 +319,8 @@ function viewBudget() {
   });
 }
 
+// function that prompts if user wants to delete a department, role, or employee and then based on that option
+// asks which item from the selected option is to be deleted and deletes it from the database
 function delOption() {
   var deptChoice = [];
   db.query(`SELECT dept_name FROM department;`, function (err, data) {
@@ -396,6 +431,7 @@ function delOption() {
     });
 }
 
+// main menu function that prompts user to choose what to do and then based on that selection runs a new function
 var menuQ = () => {
   inquirer
     .prompt({
