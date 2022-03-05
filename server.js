@@ -240,7 +240,7 @@ function updateEmpl() {
 // employees they manage
 function viewEmpByMan() {
   db.query(
-    `SELECT concat(first_name, " ", last_name) AS name FROM employee;`,
+    `SELECT id, concat(first_name, " ", last_name) AS name FROM employee;`,
     function (err, res) {
       if (err) throw err;
 
@@ -248,6 +248,7 @@ function viewEmpByMan() {
         name: name,
         value: id,
       }));
+
       inquirer
         .prompt({
           type: 'list',

@@ -32,7 +32,7 @@ There are various other functions available where you can delete a department, r
 
 ## Walkthrough video
 
-Please click this [link](link here for video) to watch a walkthrough video on how to use the application.
+Please click this [link](https://drive.google.com/file/d/1O-hCVYYiBCbMbftagzNlcOFBG9EU4YkV/view) to watch a walkthrough video on how to use the application.
 
 ## Questions
 
