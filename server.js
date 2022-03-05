@@ -66,120 +66,128 @@ function addDept() {
 
 // function to add a new role to database
 function addRole() {
-  var deptChoices = [];
-  db.query(`SELECT dept_name FROM department;`, function (err, data) {
+  db.query(`SELECT * FROM department;`, function (err, res) {
     if (err) throw err;
-    for (var i = 0; i < data.length; i++) {
-      deptChoices.push(data[i].dept_name);
-    }
-  });
 
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'role',
-        message: 'What is the name of the role?',
-      },
-      {
-        type: 'number',
-        name: 'salary',
-        message: 'What is the salary for this role?',
-      },
-      {
-        type: 'list',
-        name: 'deptOfRole',
-        message: 'What department does the role belong to?',
-        choices: deptChoices,
-      },
-    ])
-    .then((data) => {
-      const sql = `INSERT INTO emp_role(title, salary, department_id) VALUES (?, ?, ?)`;
-      const dept = deptChoices.indexOf(data.deptOfRole) + 1;
-      const param = [data.role, data.salary, dept];
+    const depts = res.map(({ id, dept_name }) => ({
+      name: dept_name,
+      value: id,
+    }));
 
-      db.query(sql, param, (err, results) => {
-        if (err) {
-          throw err;
-        }
-        console.log(data.role + ' added to database');
+    inquirer
+      .prompt([
+        {
+          type: 'input',
+          name: 'role',
+          message: 'What is the name of the role?',
+        },
+        {
+          type: 'number',
+          name: 'salary',
+          message: 'What is the salary for this role?',
+        },
+        {
+          type: 'list',
+          name: 'deptOfRole',
+          message: 'What department does the role belong to?',
+          choices: depts,
+        },
+      ])
+      .then((data) => {
+        const sql = `INSERT INTO emp_role(title, salary, department_id) VALUES (?, ?, ?)`;
+        const deptID = data.deptOfRole;
+        const param = [data.role, data.salary, deptID];
 
-        menuQ();
+        db.query(sql, param, (err, results) => {
+          if (err) {
+            throw err;
+          }
+          console.log('New role has been added to database');
+
+          menuQ();
+        });
       });
-    });
+  });
 }
 
 //function to add a new employee
 function addEmpl() {
-  var roleChoices = [];
-  db.query(`SELECT title FROM emp_role;`, function (err, data) {
-    if (err) throw err;
-    for (var i = 0; i < data.length; i++) {
-      roleChoices.push(data[i].title);
-    }
-  });
-  var managerChoices = [];
-  db.query(
-    `SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`,
-    function (err, data) {
-      if (err) throw err;
-      for (var i = 0; i < data.length; i++) {
-        managerChoices.push(data[i].name);
-      }
-    }
-  );
-
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'first_name',
-        message: "What is the employee's first name?",
-      },
-      {
-        type: 'input',
-        name: 'last_name',
-        message: "What is the employee's last name?",
-      },
-      {
-        type: 'list',
-        name: 'empRole',
-        message: "What is the employee's role?",
-        choices: roleChoices,
-      },
-      {
-        type: 'list',
-        name: 'manager',
-        message: 'Does this person have a manager?',
-        choices: ['Yes', 'No'],
-      },
-      {
-        type: 'list',
-        name: 'empManager',
-        message: "Who is the employee's manager?",
-        choices: managerChoices,
-        when(answers) {
-          return answers.manager === 'Yes';
+  db.query(`SELECT id, title FROM emp_role;`, function (err, res) {
+    const role = res.map(({ id, title }) => ({
+      name: title,
+      value: id,
+    }));
+    inquirer
+      .prompt([
+        {
+          type: 'input',
+          name: 'first_name',
+          message: "What is the employee's first name?",
         },
-      },
-    ])
-    .then((data) => {
-      const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-      const role = roleChoices.indexOf(data.empRole) + 1;
-      const manager = managerChoices.indexOf(data.empManager) + 1;
-      const param = [data.first_name, data.last_name, role, manager];
+        {
+          type: 'input',
+          name: 'last_name',
+          message: "What is the employee's last name?",
+        },
+        {
+          type: 'list',
+          name: 'empRole',
+          message: "What is the employee's role?",
+          choices: role,
+        },
+      ])
+      .then((data) => {
+        const param = [data.first_name, data.last_name, data.empRole];
+        db.query(
+          `SELECT id, concat(first_name, " ", last_name) AS name FROM employee;`,
+          function (err, res) {
+            if (err) throw err;
+            const manager = res.map(({ id, name }) => ({
+              name: name,
+              value: id,
+            }));
 
-      db.query(sql, param, (err, results) => {
-        if (err) {
-          throw err;
-        }
-        console.log(
-          data.first_name + ' ' + data.last_name + ' added to database'
+            inquirer
+              .prompt([
+                {
+                  type: 'list',
+                  name: 'manager',
+                  message: 'Does this person have a manager?',
+                  choices: ['Yes', 'No'],
+                },
+                {
+                  type: 'list',
+                  name: 'empManager',
+                  message: "Who is the employee's manager?",
+                  choices: manager,
+                  when(answers) {
+                    return answers.manager === 'Yes';
+                  },
+                },
+              ])
+              .then((manChoice) => {
+                const man = manChoice.empManager;
+                param.push(man);
+
+                const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                db.query(sql, param, (err, results) => {
+                  if (err) {
+                    throw err;
+                  }
+                  console.log(
+                    data.first_name +
+                      ' ' +
+                      data.last_name +
+                      ' added to database'
+                  );
+
+                  menuQ();
+                });
+              });
+          }
         );
-
-        menuQ();
       });
-    });
+  });
 }
 
 // function that allows for employees role to be changed by selecting which employee to change the role for, and the new role they have
@@ -232,6 +240,8 @@ function updateEmpl() {
     });
 }
 
+// function to view all employees managed by a certain individual. User is prompted for an individual and then shown a table of all
+// employees they manage
 function viewEmpByMan() {
   var manChoice = [];
   db.promise()

@@ -10,16 +10,25 @@ The repo will need to be forked from github, once this has been done run npm ins
 
 ## Usage
 
-Begin the project logging into the mysql shell and running the schema.sql file to create the database and tables. Then the project will be started by logging out of mysql and typing node server.js. This will bring you to a main menu where you can choose to:
+Begin the project logging into the mysql shell and running the schema.sql file to create the database and tables. Then the project will be started by logging out of mysql and typing node server.js. This will bring you to a main menu which looks like the following:
 
-- View departments, roles and employees;
-- Add departments, roles or employees;
-- Update employee roles or managers;
-- Delete departments, roles or employees;
-- View the utilized budget per department;
-- View employees by manager or department.
+![Display of main menu](./assets/readme1.png)
 
-Once the relelvant option has been chosen from the menu you will be taken to that section of the app and either shown the information requested, or given further prompts to add or edit information. You will then be taken back to the main menu where you can decided what to do next, or quit and end the server by pressing ctrl + c.
+Once the relelvant option has been chosen from the menu you will be taken to that section of the app and either shown the information requested, or given further prompts to add or edit information. Each time an option is chosen you will add or view the relevant data and then be taken back to the main menu where you can decided what to do next, or quit and end the server by pressing ctrl + c.
+
+This image shows the table shown if view all departments is chosen as an option.
+![Display if view all departments chosen](./assets/readme2.png)
+
+This image shows the table shown if view all employees chosen which also includes joining the three tables in the schema.sql file to get the data for this table.
+![Display if view all employees chosen](./assets/readme3.png)
+
+When adding a department, role or employee you are asked a series of prompts about the role to provide the information which will be given when an employee has that role.
+![Display of exmaple of questions asked when adding to the database](./assets/readme4.png)
+
+This will then be displayed when carrying out other functions such as updating an employees role once a new role has been added.
+![Display of new role being shown in list to update an employees role](./assets/readme5.png)
+
+There are various other functions available where you can delete a department, role, or employee or view employees by different criteria such as department or manager. These are covered in the walkthrough video.
 
 ## Walkthrough video
 
