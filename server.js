@@ -149,9 +149,18 @@ function addEmpl() {
       },
       {
         type: 'list',
+        name: 'manager',
+        message: 'Does this person have a manager?',
+        choices: ['Yes', 'No'],
+      },
+      {
+        type: 'list',
         name: 'empManager',
         message: "Who is the employee's manager?",
         choices: managerChoices,
+        when(answers) {
+          return answers.manager === 'Yes';
+        },
       },
     ])
     .then((data) => {
@@ -223,8 +232,36 @@ function updateEmpl() {
     });
 }
 
-function viewEmpByMan() {}
+function viewEmpByMan() {
+  var manChoice = [];
+  db.promise()
+    .query(`SELECT concat(first_name, " ", last_name) AS name FROM employee;`)
+    .then(function ([manager]) {
+      for (var i = 0; i < manager.length; i++) {
+        manChoice.push(manager[i].name);
+      }
+      inquirer
+        .prompt({
+          type: 'list',
+          name: 'mangView',
+          message: 'Which manager do you want to view employees for?',
+          choices: manChoice,
+        })
+        .then((data) => {
+          const sql = `SELECT employee1.id AS id, employee1.first_name AS first_name, employee1.last_name AS last_name, emp_role.title AS title, department.dept_name AS department, concat(employee2.first_name, " ", employee2.last_name) AS manager FROM employee employee1 JOIN emp_role ON employee1.role_id = emp_role.id JOIN department ON emp_role.department_id = department.id LEFT JOIN employee employee2 ON employee1.manager_id = employee2.id WHERE employee1.manager_id = (?)`;
+          const param = manChoice.indexOf(data.mangView) + 1;
+          db.query(sql, param, function (err, res) {
+            if (res) {
+              console.table(res);
+              menuQ();
+            }
+          });
+        });
+    });
+}
 
+// function to view all the employees for a specific department. User is prompted to select a department and then all employees for that
+// department will be shown in a table along with their title
 function viewEmpByDept() {
   var deptEmp = [];
   db.promise()
