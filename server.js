@@ -300,58 +300,55 @@ function viewEmpByDept() {
 // function that allows you to update an employees manager. First the employee is selected, then the manager with both selections creating an array
 // from here a query is run to change the manager id for that employee
 function updateManager() {
-  var emplChoices = [];
-  var managerChoices = [];
-  db.promise()
-    .query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee;`)
-    .then(function ([employees]) {
-      for (var i = 0; i < employees.length; i++) {
-        emplChoices.push(employees[i].name);
-      }
-      return db
-        .promise()
-        .query(
-          `SELECT CONCAT(first_name, " ", last_name) as manager FROM employee;`
-        );
-    })
-    .then(function ([manager]) {
-      for (var i = 0; i < manager.length; i++) {
-        managerChoices.push(manager[i].manager);
-      }
+  db.query(
+    `SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee;`,
+    function (err, res) {
+      const empl = res.map(({ id, name }) => ({
+        name: name,
+        value: id,
+      }));
+
       inquirer
-        .prompt([
-          {
-            type: 'list',
-            name: 'emplUpdate',
-            message: 'Which employees do you want to update?',
-            choices: emplChoices,
-          },
-          {
-            type: 'list',
-            name: 'emplManager',
-            message: 'Who is their new manager?',
-            choices: managerChoices,
-          },
-        ])
+        .prompt({
+          type: 'list',
+          name: 'emplUpdate',
+          message: 'Which employees do you want to update?',
+          choices: empl,
+        })
         .then((data) => {
-          const sql = `UPDATE employee SET manager_id = (?) WHERE id = (?);`;
-          const empl = emplChoices.indexOf(data.emplUpdate) + 1;
-          const mgr = managerChoices.indexOf(data.emplManager) + 1;
-          const param = [mgr, empl];
+          const param = [data.emplUpdate];
+          db.query(
+            `SELECT id, CONCAT(first_name, " ", last_name) as manager FROM employee;`,
+            function (err, res) {
+              const manager = res.map(({ id, manager }) => ({
+                name: manager,
+                value: id,
+              }));
 
-          db.promise()
-            .query(sql, param)
-            .then(
-              console.log(
-                data.emplUpdate +
-                  ' manager has been changed to ' +
-                  data.emplManager
-              )
-            );
+              inquirer
+                .prompt({
+                  type: 'list',
+                  name: 'emplManager',
+                  message: 'Who is their new manager?',
+                  choices: manager,
+                })
+                .then((answer) => {
+                  param.unshift(answer.emplManager);
 
-          menuQ();
+                  const sql = `UPDATE employee SET manager_id = (?) WHERE id = (?);`;
+
+                  db.query(sql, param, (err, results) => {
+                    if (err) throw err;
+
+                    console.log('Manager has now been updated');
+                    menuQ();
+                  });
+                });
+            }
+          );
         });
-    });
+    }
+  );
 }
 
 // function to select a department from the database and then sums the utilized budget for that department based on salaries of all employees in department
